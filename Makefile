@@ -11,7 +11,7 @@ SRCDIR = src
 TSTDIR = test
 MAIN = ${SRCDIR}/main.c
 MAINOBJ = ${MAIN:.c=.o}
-TARGET = ${SRCDIR}/prog
+TARGET = ${SRCDIR}/finddups
 TST_TARGET = ${TSTDIR}/tstprog
 
 SRC = ${wildcard ${SRCDIR}/*.c}
