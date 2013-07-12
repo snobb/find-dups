@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VERSION "0.01"
+#define VERSION "0.02"
 
 #define check_mem(a)   if (!a) { fputs("error: out of memory", stderr);\
                                     goto error; }

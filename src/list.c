@@ -9,9 +9,12 @@ struct lnode *list_add(struct lnode *list, const char *fname)
     struct lnode *new;
 
     new = malloc(sizeof(*new));
+    check_mem(new);
     new->value = util_strdup(fname);
     new->next = list;
     return new;
+error:
+    return NULL;
 }
 
 /* free list structure */

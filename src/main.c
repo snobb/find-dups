@@ -91,7 +91,7 @@ static int walk_dir(const char *dir, int (*cb)(char *))
             perror("error: filename is too long");
             return R_ERRDIR;
         } else {
-            if (dp->d_type == DT_REG) {
+            if (dp->d_type == DT_REG || dp->d_type == DT_DIR) {
                 sprintf(name, "%s/%s", dir, dp->d_name);
                 cb(name);
             }

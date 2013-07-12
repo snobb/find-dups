@@ -3,7 +3,7 @@
 
 #include "finddup.h"
 
-#define BUFSZ 512
+#define BUFSZ 8192 /* MD5_CBLOCK * 128 */
 
 /* generate an md5 checksum from the file contents */
 int md5_get(const char *fname, md5_t retsum)

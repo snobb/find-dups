@@ -6,17 +6,14 @@
 
 import sys, os, hashlib
 
-VERSION = "1.00"
+VERSION = "1.01"
 
-def get_md5sum(fpath, bufsize=128):
-    m = hashlib.md5()
-    with open(fpath) as f:
-        while True:
-            buf = f.read(bufsize)
-            if len(buf) <= 0:
-                break
-            m.update(buf)
-    return m.hexdigest()
+def get_md5sum(filename):
+    md5 = hashlib.md5()
+    with open(filename,'rb') as f:
+        for chunk in iter(lambda: f.read(128*md5.block_size), b''):
+            md5.update(chunk)
+    return md5.hexdigest()
 
 def find_dups(top):
     record={}
