@@ -26,7 +26,12 @@ HDR = ${wildcard *.h}
 CC = cc
 CFLAGS = -Wall
 LFLAGS = -lcrypto
-TSTLFLAGS = 
+TSTLFLAGS =
+
+INSTALL = install
+INSTALL_ARGS = -o root -g wheel -m 755
+INSTALL_DIR = /usr/local/bin/
+
 
 ifeq (${CC}, $(filter ${CC}, cc clang gcc))
 	CFLAGS += -std=gnu99 -pedantic
@@ -68,6 +73,10 @@ ${TARGET}: build_host.h ${OBJ} ${MAINOBJ}
 
 $(?D)%.o : $(?D)%.c
 	${CC} ${CFLAGS} -c $? -o $@
+
+install: release
+	${INSTALL} ${INSTALL_ARGS} ${TARGET} ${INSTALL_DIR}
+	@echo "DONE"
 
 testclean:
 	-rm -f ${TSTDIR}/*.o ${TSTDIR}/*core ${TST_TARGET}
