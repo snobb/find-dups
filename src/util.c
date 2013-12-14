@@ -11,7 +11,7 @@ char *util_strdup(const char *s)
     char *new;
 
     new = malloc(strlen(s)+1);
-    check_mem(new);
+    CHECK_MEM(new);
     strcpy(new, s);
     return new;
 error:

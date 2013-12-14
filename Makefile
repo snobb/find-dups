@@ -23,9 +23,9 @@ TSTOBJ = ${TSTSRC:.c=.o}
 
 HDR = ${wildcard *.h}
 
-CC = cc
+CC = clang
 CFLAGS = -Wall
-LFLAGS = -lcrypto
+LFLAGS = -lcrypto -pthread
 TSTLFLAGS = 
 
 ifeq (${CC}, $(filter ${CC}, cc clang gcc))

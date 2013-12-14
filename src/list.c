@@ -9,7 +9,7 @@ struct lnode *list_add(struct lnode *list, const char *fname)
     struct lnode *new;
 
     new = malloc(sizeof(*new));
-    check_mem(new);
+    CHECK_MEM(new);
     new->value = util_strdup(fname);
     new->next = list;
     return new;
@@ -27,8 +27,6 @@ void list_free(struct lnode *list)
         free(p);
     }
 }
-
-
 
 /* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
 
