@@ -7,9 +7,8 @@
 import sys, os, hashlib
 import errno
 
-VERSION = "1.03a"
+VERSION = "1.04"
 
-counter = 0
 
 def get_md5sum(filename):
     md5 = hashlib.md5()
@@ -19,14 +18,8 @@ def get_md5sum(filename):
     return md5.hexdigest()
 
 
-def print_progress():
-    global counter
-    print >>sys.stderr, "\rProcessing ... {} ".format("-/|\\"[counter]),
-    sys.stderr.flush()
-    counter = (counter + 1) % 4
-
-
 def find_dups(top, db):
+    count = 0
     for root, dirs, files in os.walk(top):
         for name in files:
             path = os.path.join(root, name)
@@ -34,10 +27,12 @@ def find_dups(top, db):
             if os.path.islink(path):
                 continue
 
-            print_progress()
-
             md5sum = get_md5sum(path)
             db.setdefault(md5sum, []).append("{}".format(path))
+
+            count += 1
+            print >>sys.stderr, "\rProcessed files: {} ".format(count),
+            sys.stderr.flush()
 
 
 def usage(prog):
@@ -65,7 +60,7 @@ if __name__ == "__main__":
                 print "\n\t".join(db[chksum])
     except IOError as e:
         if e.errno == errno.EPIPE:
-            pass
+            pass    # ignoring SIGPIPE
         else:
             print >>sys.stderr, "ERROR: {}".format(e)
             exit(1)
