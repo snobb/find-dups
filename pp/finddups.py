@@ -5,10 +5,11 @@
 #
 
 import sys, os, hashlib
+import errno
 
-VERSION = "1.03"
+VERSION = "1.03a"
 
-record = {}
+counter = 0
 
 def get_md5sum(filename):
     md5 = hashlib.md5()
@@ -18,15 +19,25 @@ def get_md5sum(filename):
     return md5.hexdigest()
 
 
-def find_dups(top):
-    global record
+def print_progress():
+    global counter
+    print >>sys.stderr, "\rProcessing ... {} ".format("-/|\\"[counter]),
+    sys.stderr.flush()
+    counter = (counter + 1) % 4
+
+
+def find_dups(top, db):
     for root, dirs, files in os.walk(top):
         for name in files:
             path = os.path.join(root, name)
-            if not os.path.islink(path):
-                md5sum = get_md5sum(path)
-                record.setdefault(md5sum, []).append("{}".format(path))
-    return record
+
+            if os.path.islink(path):
+                continue
+
+            print_progress()
+
+            md5sum = get_md5sum(path)
+            db.setdefault(md5sum, []).append("{}".format(path))
 
 
 def usage(prog):
@@ -35,24 +46,31 @@ def usage(prog):
 
 
 if __name__ == "__main__":
+    db = {}
     prog = sys.argv.pop(0)
+
     if (len(sys.argv) == 0):
         usage(prog)
         exit(1)
 
     try:
         for directory in sys.argv:
-            db = find_dups(directory)
+            find_dups(directory, db)
 
-        for chksum in record.iterkeys():
+        print >>sys.stderr, "\r",
+
+        for chksum in db.iterkeys():
             if len(db[chksum]) > 1:
                 print "{}\n\t".format(chksum),
                 print "\n\t".join(db[chksum])
     except IOError as e:
-        print "ERROR: {}".format(e.message)
-        exit(1)
+        if e.errno == errno.EPIPE:
+            pass
+        else:
+            print >>sys.stderr, "ERROR: {}".format(e)
+            exit(1)
     except KeyboardInterrupt:
-        print "interrupted..."
+        print >>sys.stderr, "interrupted..."
         exit(1)
 
 
