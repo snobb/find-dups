@@ -28,7 +28,7 @@ def find_dups(top, db):
                 continue
 
             md5sum = get_md5sum(path)
-            db.setdefault(md5sum, []).append("{}".format(path))
+            db.setdefault(md5sum, []).append(path)
 
             count += 1
             print >>sys.stderr, "\rProcessed files: {} ".format(count),
