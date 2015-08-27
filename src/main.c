@@ -1,6 +1,7 @@
 /*  main.c  */
 /*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
 
+#include "build_host.h"
 #include "finddup.h"
 #include <stdio.h>
 #include <string.h>
@@ -9,8 +10,6 @@
 #include <sys/stat.h>
 
 #define check_error(a) if((a) != R_OK) { goto error; }
-
-#define MAXPATH 1024
 
 static void usage(void);
 static int print_callback(const char *str);
@@ -23,7 +22,7 @@ int main(int argc, char **argv)
         usage();
     } else {
         while (--argc > 0) {
-            check_error(handle_file(*++argv));
+            check_error(handle_file(*(++argv)));
         }
     }
     tree_finddups(1, print_callback);
@@ -34,7 +33,7 @@ error:
 
 static void usage(void)
 {
-    puts("finddup v" VERSION "\n"
+    puts("finddup v" BUILD_VERSION "\n"
          "Usage: finddup [directory/files to search]\n");
 }
 
@@ -54,7 +53,7 @@ static int handle_file(char *fname)
 
     if (stat(fname, &stbuf) == -1) {
         perror(strerror(errno));
-        return R_ERR;
+        goto error;
     }
 
     if (S_ISDIR(stbuf.st_mode)) {
@@ -63,7 +62,9 @@ static int handle_file(char *fname)
         check_error(md5_get(fname, chksum));
         tree_add(fname, chksum);
     }
+
     return R_OK;
+
 error:
     return R_ERR;
 }
@@ -78,8 +79,7 @@ static int walk_dir(const char *dir, int (*cb)(char *))
     size_t dirlen;
 
     if ((dfd = opendir(dir)) == NULL) {
-        perror(strerror(errno));
-        return R_ERRDIR;
+        goto error;
     }
 
     dirlen = strlen(dir);
@@ -88,8 +88,7 @@ static int walk_dir(const char *dir, int (*cb)(char *))
             continue;
         }
         if ((dirlen + strlen(dp->d_name)+2) > MAXPATH) {
-            perror("error: filename is too long");
-            return R_ERRDIR;
+            goto error;
         } else {
             if (dp->d_type == DT_REG || dp->d_type == DT_DIR) {
                 sprintf(name, "%s/%s", dir, dp->d_name);
@@ -99,6 +98,11 @@ static int walk_dir(const char *dir, int (*cb)(char *))
     }
     closedir(dfd);
     return R_OK;
+
+error:
+    if (dfd) { closedir(dfd); }
+    perror(strerror(errno));
+    return R_ERRDIR;
 }
 
 /* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */

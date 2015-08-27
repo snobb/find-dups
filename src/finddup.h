@@ -6,10 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VERSION "0.02"
+#define _XOPEN_SOURCE 700
 
-#define check_mem(a)   if (!a) { fputs("error: out of memory", stderr);\
-                                    goto error; }
+#define MAXPATH 1024
+
+#define check_mem(a)   if (!a) { fputs("error: out of memory", stderr); }
 
 enum { R_OK, R_ERR, R_ERRDIR };
 
@@ -19,6 +20,7 @@ typedef unsigned char md5_t[MD5_DIGEST_LENGTH];
 /* linked list to store the duplicate file names */
 struct lnode {
     char *value;
+    md5_t *chksum;
     struct lnode *next;
 };
 
@@ -46,6 +48,7 @@ void md5_print(const md5_t chksum);
 int md5_compare(const md5_t cs1, const md5_t cs_2);
 
 /* util.c */
-char *util_strdup(const char *s);
+void die(const char *errstr, ...);
+char *xstrndup(const char *src, size_t max);
 
 #endif /* FINDDUP_H */

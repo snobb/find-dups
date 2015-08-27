@@ -13,6 +13,7 @@ type
 
 var fCount: int64 = 0
 
+
 # calculate md5 sum of a given file
 proc getMd5Sum(fname: string) :string=
     const blockSize: int = 64 * 128;

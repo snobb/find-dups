@@ -13,6 +13,7 @@ static void tree_finddups_rec(struct tnode *root, int morethen,
                               int (*cb)(const char *));
 static void tree_free_rec(struct tnode *root);
 
+size_t max_bucket_depth = 0;
 
 void tree_add(const char *fname, const md5_t chksum)
 {
@@ -66,6 +67,7 @@ static void tree_add_rec(struct tnode **root_branch, const char *fname,
 static void tree_finddups_rec(struct tnode *root, int morethen,
                               int (*cb)(const char *))
 {
+    size_t depth = 0;
     struct lnode *p;
 
     if (!root) {
@@ -78,6 +80,7 @@ static void tree_finddups_rec(struct tnode *root, int morethen,
         printf("\n");
         for (p = root->names; p; p=p->next) {
             cb(p->value);
+            ++depth;
         }
     }
     tree_finddups_rec(root->right, morethen, cb);

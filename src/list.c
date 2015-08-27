@@ -9,12 +9,10 @@ struct lnode *list_add(struct lnode *list, const char *fname)
     struct lnode *new;
 
     new = malloc(sizeof(*new));
-    check_mem(new);
-    new->value = util_strdup(fname);
+    if (!new) { die("error: out of memory"); }
+    new->value = xstrndup(fname, MAXPATH);
     new->next = list;
     return new;
-error:
-    return NULL;
 }
 
 /* free list structure */
@@ -28,7 +26,4 @@ void list_free(struct lnode *list)
     }
 }
 
-
-
 /* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
-
