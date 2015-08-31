@@ -26,7 +26,7 @@ HDR = $(wildcard *.h)
 CC = cc
 CFLAGS = -Wall
 LFLAGS = -lcrypto
-TSTLFLAGS = -g
+TSTLFLAGS = -g -lcrypto
 
 INSTALL = install
 INSTALL_ARGS = -o root -g wheel -m 755
