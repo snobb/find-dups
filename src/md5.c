@@ -1,7 +1,8 @@
 /*  md5.c  */
 /*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
 
-#include "finddup.h"
+#include <stdlib.h>
+#include "md5.h"
 
 #define BUFSZ 8192 /* MD5_CBLOCK * 128 */
 

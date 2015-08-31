@@ -1,13 +1,17 @@
-/*  main.c  */
-/*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
+/*
+ *  main.c
+ *  Author: Alex Kozadaev (2015)
+ */
 
-#include "build_host.h"
-#include "finddup.h"
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
+
+#include "build_host.h"
+#include "common.h"
+#include "hashlist.h"
 
 #define check_error(a) if((a) != R_OK) { goto error; }
 
@@ -16,29 +20,33 @@ static int print_callback(const char *str);
 static int handle_file(char *fname);
 static int walk_dir(const char *dir, int (*cb)(char *));
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     if (argc == 1) {
         usage();
     } else {
+        hashlist_init();
         while (--argc > 0) {
             check_error(handle_file(*(++argv)));
         }
     }
-    tree_finddups(1, print_callback);
+    //tree_finddups(1, print_callback);
 error:
-    tree_free();
+    hashlist_free();
     return 0;
 }
 
-static void usage(void)
+static void
+usage(void)
 {
     puts("finddup v" BUILD_VERSION "\n"
          "Usage: finddup [directory/files to search]\n");
 }
 
 /* file name printing callback */
-static int print_callback(const char *str)
+static int
+print_callback(const char *str)
 {
     return printf("\t%s\n", str);
 }
@@ -46,7 +54,8 @@ static int print_callback(const char *str)
 /* handle the files in the given directory
  * calls walk_dir in case a directory is found and recursively
  * looking through in the subdirectories */
-static int handle_file(char *fname)
+static int
+handle_file(char *fname)
 {
     struct stat stbuf;
     md5_t chksum;
@@ -60,7 +69,7 @@ static int handle_file(char *fname)
         check_error(walk_dir(fname, handle_file));
     } else {
         check_error(md5_get(fname, chksum));
-        tree_add(fname, chksum);
+        //tree_add(fname, chksum);
     }
 
     return R_OK;
@@ -71,7 +80,8 @@ error:
 
 /* got to the directory, make necessary checks and call
  * (handle_files) to handle the contents */
-static int walk_dir(const char *dir, int (*cb)(char *))
+static int
+walk_dir(const char *dir, int (*cb)(char *))
 {
     char name[MAXPATH];
     struct dirent *dp;
@@ -105,5 +115,4 @@ error:
     return R_ERRDIR;
 }
 
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
-
+/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

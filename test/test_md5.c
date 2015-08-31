@@ -1,10 +1,11 @@
 /*  test_md5.c  */
 /*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
 
-#include "minunit.h"
-#include "../src/finddup.h"
 #include <stdio.h>
 #include <string.h>
+#include "minunit.h"
+#include "../src/common.h"
+#include "../src/md5.h"
 
 #define DEBUG 1
 
