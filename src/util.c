@@ -23,7 +23,7 @@ inline char
 *xstrndup(const char *src, size_t max)
 {
     char *dst;
-    int n = strlen(src + 1);
+    int n = strlen(src) + 1;
 
     if (n > max) {
         n = max;
@@ -33,7 +33,7 @@ inline char
     if (!dst) {
         die("xstrndup: out of memory\n");
     }
-    memcpy(dst, src, n - 1);
+    strncpy(dst, src, n);
     dst[n - 1] = '\0';
 
     return dst;

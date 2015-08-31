@@ -28,13 +28,15 @@ main(int argc, char **argv)
     } else {
         hashlist_init();
         while (--argc > 0) {
-            check_error(handle_file(*(++argv)));
+            if (handle_file(*(++argv)) != R_OK) {
+                usage();
+                die("error: invalid agruments\n");
+            }
         }
+        hashlist_finddups(print_callback);
+        hashlist_free();
     }
-    //tree_finddups(1, print_callback);
-error:
-    hashlist_free();
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 static void
@@ -69,7 +71,7 @@ handle_file(char *fname)
         check_error(walk_dir(fname, handle_file));
     } else {
         check_error(md5_get(fname, chksum));
-        //tree_add(fname, chksum);
+        hashlist_add(chksum, fname);
     }
 
     return R_OK;

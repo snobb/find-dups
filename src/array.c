@@ -11,17 +11,7 @@
 #define INITIAL_SIZE    32
 #define ARRAY_FACTOR    2.0f
 
-static void
-array_resize(struct array *arr, float factor)
-{
-    size_t newallocsz = (int)(arr->allocated * factor);
-    char **new = realloc(arr->values, newallocsz);
-
-    CHECK_MEM(new);
-
-    arr->values = new;
-    arr->allocated = newallocsz;
-}
+static void array_resize(struct array *arr, float factor);
 
 struct array *
 array_new(void)
@@ -32,7 +22,7 @@ array_new(void)
 
     new->allocated = INITIAL_SIZE;
     new->size = 0;
-    values = calloc(sizeof(*(new->values)), new->allocated);
+    values = calloc(sizeof(*values), new->allocated);
     CHECK_MEM(values);
 
     new->values = values;
@@ -47,14 +37,31 @@ array_add(struct array *arr, const char *value)
         array_resize(arr, ARRAY_FACTOR);
     }
 
-    arr->values[arr->size++] = xstrndup(value, MAXPATH);
+    arr->values[arr->size] = xstrndup(value, MAXPATH);
+    ++arr->size;
 }
 
 void
 array_free(struct array *arr)
 {
+    for (int i = 0; i < arr->size; i++) {
+        if (arr->values[i]) {
+            free(arr->values[i]);
+        }
+    }
     free(arr->values);
     free(arr);
+}
+
+static void
+array_resize(struct array *arr, float factor)
+{
+    size_t newallocsz = (int)(arr->allocated * factor);
+    char **new = realloc(arr->values, newallocsz);
+    CHECK_MEM(new);
+
+    arr->values = new;
+    arr->allocated = newallocsz;
 }
 
 /* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

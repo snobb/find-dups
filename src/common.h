@@ -9,7 +9,7 @@
 
 #define MAXPATH 1024
 
-#define CHECK_MEM(a)   if (!a) { die("error: out of memory"); }
+#define CHECK_MEM(a)   if (!a) { die("error: out of memory\n"); }
 
 enum { R_OK, R_ERR, R_ERRDIR };
 

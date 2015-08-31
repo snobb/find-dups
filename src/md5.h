@@ -13,6 +13,7 @@ typedef unsigned char md5_t[MD5_DIGEST_LENGTH];
 
 int md5_get(const char *fname, md5_t retsum);
 void md5_print(const md5_t chksum);
+void md5_copy(md5_t dst, const md5_t src);
 int md5_compare(const md5_t cs1, const md5_t cs_2);
 
 #endif /* MD5_H */
