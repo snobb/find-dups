@@ -11,21 +11,16 @@
 #define INITIAL_SIZE    32
 #define ARRAY_FACTOR    2.0f
 
-static void array_resize(struct array *arr, float factor);
-
 struct array *
 array_new(void)
 {
     struct array *new = malloc(sizeof(*new));
-    char **values;
     CHECK_MEM(new);
 
     new->allocated = INITIAL_SIZE;
     new->size = 0;
-    values = calloc(sizeof(*values), new->allocated);
-    CHECK_MEM(values);
-
-    new->values = values;
+    new->values = calloc(sizeof(*new->values), new->allocated);
+    CHECK_MEM(new->values);
 
     return new;
 }
@@ -33,12 +28,18 @@ array_new(void)
 void
 array_add(struct array *arr, const char *value)
 {
-    if (arr->size == arr->allocated) {
-        array_resize(arr, ARRAY_FACTOR);
+    char **new;
+    if (arr->size >= arr->allocated) {
+        arr->allocated = (int)(arr->allocated * ARRAY_FACTOR);
+        new = realloc(arr->values, arr->allocated * sizeof(*arr->values));
+        if (!new || new == arr->values) {
+            die("error: realloc failed");
+        }
+
+        arr->values = new;
     }
 
-    arr->values[arr->size] = xstrndup(value, MAXPATH);
-    ++arr->size;
+    arr->values[arr->size++] = xstrndup(value, MAXPATH);
 }
 
 void
@@ -51,17 +52,6 @@ array_free(struct array *arr)
     }
     free(arr->values);
     free(arr);
-}
-
-static void
-array_resize(struct array *arr, float factor)
-{
-    size_t newallocsz = (int)(arr->allocated * factor);
-    char **new = realloc(arr->values, newallocsz);
-    CHECK_MEM(new);
-
-    arr->values = new;
-    arr->allocated = newallocsz;
 }
 
 /* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */
