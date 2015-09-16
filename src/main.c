@@ -11,7 +11,7 @@
 
 #include "build_host.h"
 #include "common.h"
-#include "hashlist.h"
+#include "hasharray.h"
 
 #define check_error(a) if((a) != R_OK) { goto error; }
 
@@ -26,15 +26,15 @@ main(int argc, char **argv)
     if (argc == 1) {
         usage();
     } else {
-        hashlist_init();
+        hasharray_init();
         while (--argc > 0) {
             if (handle_file(*(++argv)) != R_OK) {
                 usage();
                 die("error: invalid agruments\n");
             }
         }
-        hashlist_finddups(print_callback);
-        hashlist_free();
+        hasharray_finddups(print_callback);
+        hasharray_free();
     }
     return EXIT_SUCCESS;
 }
@@ -71,7 +71,7 @@ handle_file(char *fname)
         check_error(walk_dir(fname, handle_file));
     } else {
         check_error(md5_get(fname, chksum));
-        hashlist_add(chksum, fname);
+        hasharray_add(chksum, fname);
     }
 
     return R_OK;

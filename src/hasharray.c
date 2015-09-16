@@ -1,25 +1,25 @@
 /*
- *  hashlist.c
+ *  hasharray.c
  *  Author: Alex Kozadaev (2015)
  */
 
 #include <string.h>
 #include "common.h"
 #include "md5.h"
-#include "hashlist.h"
+#include "hasharray.h"
 
 #define NHASH           4001
 #define MULTIPLIER      31
 
-static struct hashlist **list = NULL;
+static struct hasharray **list = NULL;
 
-static size_t hashlist_hash(const unsigned char *str);
-static struct hashlist *hashlist_bucket_lookup(const md5_t chksum);
-static void hashlist_freenode(struct hashlist *list);
+static size_t hasharray_hash(const unsigned char *str);
+static struct hasharray *hasharray_bucket_lookup(const md5_t chksum);
+static void hasharray_freenode(struct hasharray *list);
 
-/* initialize the hashlist */
+/* initialize the hasharray */
 void
-hashlist_init(void)
+hasharray_init(void)
 {
     list = calloc(sizeof(*list), NHASH);
     CHECK_MEM(list);
@@ -27,12 +27,12 @@ hashlist_init(void)
 
 /* add a filename to the list of duplicates */
 void
-hashlist_add(const md5_t chksum, const char *fname)
+hasharray_add(const md5_t chksum, const char *fname)
 {
-    struct hashlist *head, *new;
-    size_t idx = hashlist_hash(chksum);
+    struct hasharray *head, *new;
+    size_t idx = hasharray_hash(chksum);
 
-    head = hashlist_bucket_lookup(chksum);
+    head = hasharray_bucket_lookup(chksum);
     if (!head) {
         new = malloc(sizeof(*new));
         CHECK_MEM(new);
@@ -47,9 +47,9 @@ hashlist_add(const md5_t chksum, const char *fname)
 }
 
 void
-hashlist_finddups(int (*cb)(const char*))
+hasharray_finddups(int (*cb)(const char*))
 {
-    struct hashlist *ptr;
+    struct hasharray *ptr;
     struct array *array;
     for (int i = 0; i < NHASH; ++i) {
         for (ptr = list[i]; ptr != NULL; ptr = ptr->next) {
@@ -65,16 +65,16 @@ hashlist_finddups(int (*cb)(const char*))
 }
 
 void
-hashlist_free(void)
+hasharray_free(void)
 {
     for (int i = 0; i < NHASH; i++) {
-        hashlist_freenode(list[i]);
+        hasharray_freenode(list[i]);
     }
     free(list);
 }
 
 static size_t
-hashlist_hash(const unsigned char *str)
+hasharray_hash(const unsigned char *str)
 {
     size_t p = 0;
     for (int i = 0; str[i] != '\0'; i++) {
@@ -83,11 +83,11 @@ hashlist_hash(const unsigned char *str)
     return p % NHASH;
 }
 
-static struct hashlist *
-hashlist_bucket_lookup(const md5_t chksum)
+static struct hasharray *
+hasharray_bucket_lookup(const md5_t chksum)
 {
-    struct hashlist *head, *ptr;
-    size_t idx = hashlist_hash(chksum);
+    struct hasharray *head, *ptr;
+    size_t idx = hasharray_hash(chksum);
 
     if (!list[idx]) {
         return NULL;    /* bucket does not exist */
@@ -105,9 +105,9 @@ hashlist_bucket_lookup(const md5_t chksum)
 
 /* free list structure */
 static void
-hashlist_freenode(struct hashlist *list)
+hasharray_freenode(struct hasharray *list)
 {
-    struct hashlist *ptr, *next = list;
+    struct hasharray *ptr, *next = list;
     for (ptr = list; ptr != NULL; ptr = next) {
         next = ptr->next;
         array_free(ptr->fnames);
