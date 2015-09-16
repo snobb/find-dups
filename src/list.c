@@ -1,7 +1,7 @@
 /*  list.c  */
 /*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
 
-#include "finddup.h"
+#include "list.h"
 
 /* add a filename to the list of duplicates */
 struct lnode *list_add(struct lnode *list, const char *fname)
@@ -9,7 +9,7 @@ struct lnode *list_add(struct lnode *list, const char *fname)
     struct lnode *new;
 
     new = malloc(sizeof(*new));
-    if (!new) { die("error: out of memory"); }
+    CHECK_MEM(new);
     new->value = xstrndup(fname, MAXPATH);
     new->next = list;
     return new;

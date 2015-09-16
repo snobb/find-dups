@@ -1,12 +1,15 @@
-/*  util.c  */
-/*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
+/*
+ *  util.c
+ *  Author: Alex Kozadaev (2015)
+ */
 
-#include "finddup.h"
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "util.h"
 
-void die(const char *errstr, ...)
+void
+die(const char *errstr, ...)
 {
     va_list ap;
 
@@ -16,10 +19,11 @@ void die(const char *errstr, ...)
     exit(1);
 }
 
-inline char *xstrndup(const char *src, size_t max)
+inline char
+*xstrndup(const char *src, size_t max)
 {
     char *dst;
-    int n = strlen(src + 1);
+    int n = strlen(src) + 1;
 
     if (n > max) {
         n = max;
@@ -29,11 +33,10 @@ inline char *xstrndup(const char *src, size_t max)
     if (!dst) {
         die("xstrndup: out of memory\n");
     }
-    memcpy(dst, src, n - 1);
+    strncpy(dst, src, n);
     dst[n - 1] = '\0';
 
     return dst;
 }
 
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
-
+/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */
