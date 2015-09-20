@@ -54,7 +54,8 @@ hashlist_finddups(int (*cb)(const char*))
     for (int i = 0; i < NHASH; ++i) {
         for (ptr = list[i]; ptr != NULL; ptr = ptr->next) {
             fnames = ptr->fnames;
-            if (fnames) {
+            /* display only if there are at least 2 records */
+            if (fnames && fnames->next) {
                 md5_print(ptr->chksum);
                 for (; fnames != NULL; fnames = fnames->next) {
                     cb(fnames->value);
