@@ -17,6 +17,7 @@
 
 static void usage(void);
 static int print_callback(const char *str);
+static void update_progress(void);
 static int handle_file(char *fname);
 static int walk_dir(const char *dir, int (*cb)(char *));
 
@@ -33,6 +34,7 @@ main(int argc, char **argv)
                 die("error: invalid agruments\n");
             }
         }
+        fputc('\r', stderr);    /* make sure the cursor is at the begining */
         hasharray_finddups(print_callback);
         hasharray_free();
     }
@@ -51,6 +53,13 @@ static int
 print_callback(const char *str)
 {
     return printf("\t%s\n", str);
+}
+
+static void
+update_progress(void)
+{
+    static unsigned fcount = 0;
+    fprintf(stderr, "\rProcessed files: %d   ", ++fcount);
 }
 
 /* handle the files in the given directory
@@ -72,6 +81,7 @@ handle_file(char *fname)
     } else {
         check_error(md5_get(fname, chksum));
         hasharray_add(chksum, fname);
+        update_progress();
     }
 
     return R_OK;
