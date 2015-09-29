@@ -46,9 +46,7 @@ void
 array_free(struct array *arr)
 {
     for (int i = 0; i < arr->size; i++) {
-        if (arr->values[i]) {
-            free(arr->values[i]);
-        }
+        free(arr->values[i]);
     }
     free(arr->values);
     free(arr);
