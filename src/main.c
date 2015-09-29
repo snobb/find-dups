@@ -69,7 +69,7 @@ static int
 handle_file(char *fname)
 {
     struct stat stbuf;
-    md5_t chksum;
+    md5_t chksum = { 0 };
 
     if (stat(fname, &stbuf) == -1) {
         perror(strerror(errno));
