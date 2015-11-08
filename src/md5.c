@@ -1,5 +1,7 @@
-/*  md5.c  */
-/*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
+/*
+ *  md5.c
+ *  author: Aleksei Kozadaev (2013)
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +38,7 @@ void
 md5_print(const md5_t chksum)
 {
     int i;
-    for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+    for (i = 0; i < MD5_DIGEST_LENGTH; ++i) {
         printf("%02x", chksum[i]);
     }
     putc('\n', stdout);
@@ -60,6 +62,4 @@ md5_compare(const md5_t cs1, const md5_t cs2)
     }
     return *p1 - *p2;
 }
-
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
 

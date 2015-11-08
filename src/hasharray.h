@@ -19,5 +19,4 @@ void hasharray_add(const md5_t chksum, const char *fname);
 void hasharray_finddups(int (*cb)(const char*));
 void hasharray_free(void);
 
-
 #endif /* __HASHLIST_H__ */

@@ -11,7 +11,6 @@ struct array {
     size_t allocated;
 };
 
-/* array.c */
 struct array *array_new(void);
 void array_add(struct array *arr, const char *value);
 void array_free(struct array *arr);

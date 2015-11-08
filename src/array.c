@@ -45,11 +45,10 @@ array_add(struct array *arr, const char *value)
 void
 array_free(struct array *arr)
 {
-    for (int i = 0; i < arr->size; i++) {
+    for (int i = 0; i < arr->size; ++i) {
         free(arr->values[i]);
     }
     free(arr->values);
     free(arr);
 }
 
-/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

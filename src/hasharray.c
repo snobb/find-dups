@@ -67,7 +67,7 @@ hasharray_finddups(int (*cb)(const char*))
 void
 hasharray_free(void)
 {
-    for (int i = 0; i < NHASH; i++) {
+    for (int i = 0; i < NHASH; ++i) {
         hasharray_freenode(list[i]);
     }
     free(list);
@@ -77,7 +77,7 @@ static size_t
 hasharray_hash(const unsigned char *str)
 {
     size_t p = 0;
-    for (int i = 0; str[i] != '\0'; i++) {
+    for (int i = 0; str[i] != '\0'; ++i) {
         p += MULTIPLIER * p + str[i];
     }
     return p % NHASH;
@@ -115,4 +115,3 @@ hasharray_freenode(struct hasharray *list)
     }
 }
 
-/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

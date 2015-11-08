@@ -13,5 +13,4 @@
 
 enum { R_OK, R_ERR, R_ERRDIR };
 
-
 #endif /* __COMMON_H__ */
