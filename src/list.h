@@ -12,7 +12,6 @@ struct lnode {
     struct lnode *next;
 };
 
-/* list.c */
 struct lnode *list_add(struct lnode *list, const char *fname);
 void list_free(struct lnode *list);
 

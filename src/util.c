@@ -39,4 +39,3 @@ inline char
     return dst;
 }
 
-/* vim: set ts=4 sts=8 sw=4 smarttab et si tw=80 cino=t0l1(0k2s fo=crtocl */

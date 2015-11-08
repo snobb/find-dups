@@ -1,5 +1,7 @@
-/*  list.c  */
-/*  Copyright (C) 2013 Alex Kozadaev [akozadaev at yahoo com]  */
+/*
+ *  list.c
+ *  author: Aleksei Kozadaev (2015)
+ */
 
 #include "list.h"
 
@@ -26,4 +28,3 @@ void list_free(struct lnode *list)
     }
 }
 
-/* vim: ts=4 sts=8 sw=4 smarttab et si tw=80 ci cino+=t0(0 list */
