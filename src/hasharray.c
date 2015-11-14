@@ -15,7 +15,7 @@ static struct hasharray **list = NULL;
 
 static size_t hasharray_hash(const unsigned char *str);
 static struct hasharray *hasharray_bucket_lookup(const md5_t chksum);
-static void hasharray_freenode(struct hasharray *list);
+static void hasharray_freenode(struct hasharray *node);
 
 /* initialize the hasharray */
 void
@@ -103,12 +103,12 @@ hasharray_bucket_lookup(const md5_t chksum)
     return NULL;
 }
 
-/* free list structure */
+/* free node structure (linked list) */
 static void
-hasharray_freenode(struct hasharray *list)
+hasharray_freenode(struct hasharray *node)
 {
-    struct hasharray *ptr, *next = list;
-    for (ptr = list; ptr != NULL; ptr = next) {
+    struct hasharray *ptr, *next = node;
+    for (ptr = node; ptr != NULL; ptr = next) {
         next = ptr->next;
         array_free(ptr->fnames);
         free(ptr);
