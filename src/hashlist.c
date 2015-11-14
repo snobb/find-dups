@@ -15,7 +15,7 @@ static struct hashlist **list = NULL;
 
 static size_t hashlist_hash(const unsigned char *str);
 static struct hashlist *hashlist_bucket_lookup(const md5_t chksum);
-static void hashlist_freenode(struct hashlist *list);
+static void hashlist_freenode(struct hashlist *node);
 
 /* initialize the hashlist */
 void
@@ -106,10 +106,10 @@ hashlist_bucket_lookup(const md5_t chksum)
 
 /* free list structure */
 static void
-hashlist_freenode(struct hashlist *list)
+hashlist_freenode(struct hashlist *node)
 {
-    struct hashlist *ptr, *next = list;
-    for (ptr = list; ptr != NULL; ptr = next) {
+    struct hashlist *ptr, *next = node;
+    for (ptr = node; ptr != NULL; ptr = next) {
         next = ptr->next;
         list_free(ptr->fnames);
         free(ptr);
