@@ -47,7 +47,7 @@ endif
 
 all: debug
 
-debug: CFLAGS += -g -DDEBUG -O2
+debug: CFLAGS += -g -DDEBUG
 debug: LFLAGS += -g
 debug: build
 

@@ -2,15 +2,16 @@
 #define __HASHLIST_H__
 
 #include <stdlib.h>
+#include <sys/queue.h>
 #include "common.h"
 #include "md5.h"
 #include "array.h"
 
 /* hashmap node */
-struct hasharray {
+struct hashnode {
     md5_t chksum;
     struct array *fnames;
-    struct hasharray *next;
+    LIST_ENTRY(hashnode) entries;
 };
 
 /* hasharray.c */

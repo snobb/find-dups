@@ -11,16 +11,17 @@
 #define NHASH           4001
 #define MULTIPLIER      31
 
-static struct hasharray **list = NULL;
+static LIST_HEAD(registry, hashnode) *list = NULL;
 
 static size_t hasharray_hash(const unsigned char *str);
-static struct hasharray *hasharray_bucket_lookup(const md5_t chksum);
-static void hasharray_freenode(struct hasharray *node);
+static struct hashnode *hasharray_lookup(const md5_t chksum);
+static void hasharray_freenode(struct registry *node);
 
 /* initialize the hasharray */
 void
 hasharray_init(void)
 {
+    /* no need to HEAD_INIT since we nullify the storage */
     list = calloc(sizeof(*list), NHASH);
     CHECK_MEM(list);
 }
@@ -29,18 +30,18 @@ hasharray_init(void)
 void
 hasharray_add(const md5_t chksum, const char *fname)
 {
-    struct hasharray *head, *new;
-    size_t idx = hasharray_hash(chksum);
+    struct hashnode *head;
 
-    head = hasharray_bucket_lookup(chksum);
+    head = hasharray_lookup(chksum);
     if (!head) {
-        new = malloc(sizeof(*new));
-        CHECK_MEM(new);
+        head = calloc(sizeof(*head), 1);
+        CHECK_MEM(head);
 
-        md5_copy(new->chksum, chksum);
-        new->fnames = array_new();
-        new->next = list[idx];
-        head = list[idx] = new;
+        size_t idx = hasharray_hash(chksum);
+        md5_copy(head->chksum, chksum);
+        head->fnames = array_new();
+
+        LIST_INSERT_HEAD(&list[idx], head, entries);
     }
 
     array_add(head->fnames, fname);
@@ -49,10 +50,10 @@ hasharray_add(const md5_t chksum, const char *fname)
 void
 hasharray_finddups(int (*cb)(const char*))
 {
-    struct hasharray *ptr;
+    struct hashnode *ptr;
     struct array *array;
     for (int i = 0; i < NHASH; ++i) {
-        for (ptr = list[i]; ptr != NULL; ptr = ptr->next) {
+        LIST_FOREACH(ptr, &list[i], entries) {
             array = ptr->fnames;
             if (array->size > 1) {
                 md5_print(ptr->chksum);
@@ -67,8 +68,9 @@ hasharray_finddups(int (*cb)(const char*))
 void
 hasharray_free(void)
 {
+    struct registry *lst = list;
     for (int i = 0; i < NHASH; ++i) {
-        hasharray_freenode(list[i]);
+        hasharray_freenode(lst++);
     }
     free(list);
 }
@@ -83,18 +85,18 @@ hasharray_hash(const unsigned char *str)
     return p % NHASH;
 }
 
-static struct hasharray *
-hasharray_bucket_lookup(const md5_t chksum)
+static struct hashnode *
+hasharray_lookup(const md5_t chksum)
 {
-    struct hasharray *head, *ptr;
+    struct hashnode *ptr;
+
     size_t idx = hasharray_hash(chksum);
 
-    if (!list[idx]) {
+    if (!list[idx].lh_first) {
         return NULL;    /* bucket does not exist */
     }
 
-    head = list[idx];
-    for (ptr = head; ptr != NULL; ptr = ptr->next) {
+    LIST_FOREACH(ptr, &list[idx], entries) {
         if (md5_compare(ptr->chksum, chksum) == 0) {
             return ptr;
         }
@@ -105,11 +107,14 @@ hasharray_bucket_lookup(const md5_t chksum)
 
 /* free node structure (linked list) */
 static void
-hasharray_freenode(struct hasharray *node)
+hasharray_freenode(struct registry *node)
 {
-    struct hasharray *ptr, *next = node;
-    for (ptr = node; ptr != NULL; ptr = next) {
-        next = ptr->next;
+    struct hashnode *ptr = node->lh_first,
+                    *ptr_next = NULL;
+
+    for (ptr = node->lh_first; ptr; ptr = ptr_next) {
+        ptr_next = ptr->entries.le_next;
+        LIST_REMOVE(ptr, entries);
         array_free(ptr->fnames);
         free(ptr);
     }
