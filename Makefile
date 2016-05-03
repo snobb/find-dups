@@ -29,7 +29,7 @@ LFLAGS = -lcrypto
 TSTLFLAGS = -g -lcrypto
 
 INSTALL = install
-INSTALL_ARGS = -o root -g wheel -m 755
+INSTALL_ARGS = -o root -g root -m 755
 INSTALL_DIR = /usr/local/bin/
 
 ifeq ($(CC), $(filter $(CC), cc clang gcc))

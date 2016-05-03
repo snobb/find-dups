@@ -3,6 +3,8 @@
 // Author: Alex Kozadaev (2015)
 //
 
+#[macro_use(print_err)]
+extern crate finddups;
 extern crate crypto;
 
 use std::env;
@@ -24,11 +26,11 @@ struct DupsData {
 }
 
 impl DupsData {
-    fn new() -> DupsData {
-        DupsData {
+    fn new() -> Box<DupsData> {
+        Box::new(DupsData {
             data: HashMap::new(),
             cnt: 0
-        }
+        })
     }
 
     // get an md5sum for the given file
@@ -55,7 +57,7 @@ impl DupsData {
     // record and display "progress bar"
     fn update_progress(&mut self) {
         self.cnt += 1;
-        print!("\rprocessing: {}   ", self.cnt);
+        print_err!("\rprocessing: {}   ", self.cnt);
     }
 
     // process files and folders and fill the data database.
@@ -124,5 +126,3 @@ fn main() {
         dups_data.display_results();
     }
 }
-
-// vim: ts=4 sts=8 sw=4 tw=80 ai smarttab et fo=rtcq list

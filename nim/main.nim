@@ -112,4 +112,3 @@ when isMainModule:
     finally:
         write(stderr, "\n");
 
-# vim: ts=4 sts=4 sw=4 tw=80 ai smarttab et fo=rtcq list
