@@ -24,7 +24,7 @@ TSTOBJ = $(TSTSRC:.c=.o)
 HDR = $(wildcard *.h)
 
 CC = cc
-CFLAGS = -Wall
+CFLAGS += -Wall
 LFLAGS = -lcrypto
 TSTLFLAGS = -g -lcrypto
 
