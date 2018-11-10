@@ -34,8 +34,9 @@ impl DupsData {
     }
 
     // get an md5sum for the given file
-    fn get_md5sum(&self, fname: &str) -> String {
-        let fpath = Path::new(fname);
+    fn get_md5sum(&self, fpath: &Path) -> String {
+        let fname = fpath.to_str().unwrap();
+
         let mut file = match fs::File::open(fpath) {
             Ok(f)   => io::BufReader::new(f),
             Err(e)  => panic!("couldn't open {}: {}", fname, e),
@@ -62,19 +63,22 @@ impl DupsData {
 
     // process files and folders and fill the data database.
     fn process_folder(&mut self, dir: &Path) -> io::Result<()> {
-        if try!(fs::metadata(dir)).is_dir() {
-            for entry in try!(fs::read_dir(dir)) {
-                let entry = try!(entry);
-                if try!(fs::metadata(entry.path())).is_dir() {
-                    try!(self.process_folder(&entry.path()));
+        if dir.is_dir() {
+            for entry in fs::read_dir(dir)? {
+                let entry = entry?;
+                let path = entry.path();
+
+                if path.is_dir() {
+                    self.process_folder(&path)?;
+
                 } else {
-                    let file_path = entry.path();
-                    let file = file_path.to_str().unwrap();
-                    let key = self.get_md5sum(file);
+                    let fname = path.to_str().unwrap();
+                    let key = self.get_md5sum(&path);
+
                     if self.data.contains_key(&key) {
-                        self.data.get_mut(&key).unwrap().push(file.to_string());
+                        self.data.get_mut(&key).unwrap().push(fname.to_string());
                     } else {
-                        self.data.insert(key, vec![file.to_string()]);
+                        self.data.insert(key, vec![fname.to_string()]);
                     }
 
                     self.update_progress();
@@ -110,6 +114,7 @@ fn main() {
     // directories were not provided
     if args.len() == 1 {
         usage(&program);
+
     } else {
         // data storage (shared across the provided dirs)
         let mut dups_data = DupsData::new();
