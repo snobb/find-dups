@@ -71,8 +71,12 @@ impl DupsData {
                 if path.is_dir() {
                     self.process_folder(&path)?;
 
+                } else if !path.is_file() {
+                    continue
+
                 } else {
                     let fname = path.to_str().unwrap();
+
                     let key = self.get_md5sum(&path);
 
                     if self.data.contains_key(&key) {
