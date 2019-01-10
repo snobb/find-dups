@@ -12,13 +12,13 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::Path;
 
-use crypto::md5;
 use crypto::digest::Digest;
+use crypto::md5;
 
 use std::collections::HashMap;
 
-const VERSION : &'static str = "0.01";
-const BLOCK_SIZE : usize = 128;
+const VERSION: &str = "0.01";
+const BLOCK_SIZE: usize = 128;
 
 struct DupsData {
     data: HashMap<String, Vec<String>>,
@@ -26,11 +26,11 @@ struct DupsData {
 }
 
 impl DupsData {
-    fn new() -> Box<DupsData> {
-        Box::new(DupsData {
+    fn new() -> Self {
+        Self {
             data: HashMap::new(),
-            cnt: 0
-        })
+            cnt: 0,
+        }
     }
 
     // get an md5sum for the given file
@@ -38,8 +38,8 @@ impl DupsData {
         let fname = fpath.to_str().unwrap();
 
         let mut file = match fs::File::open(fpath) {
-            Ok(f)   => io::BufReader::new(f),
-            Err(e)  => panic!("couldn't open {}: {}", fname, e),
+            Ok(f) => io::BufReader::new(f),
+            Err(e) => panic!("couldn't open {}: {}", fname, e),
         };
 
         let mut md5 = md5::Md5::new();
@@ -47,9 +47,9 @@ impl DupsData {
 
         loop {
             match file.read(&mut buf) {
-                Ok(0)       => break,
-                Ok(_)       => md5.input(&mut buf),
-                Err(e)      => panic!("{}: {}", fname, e),
+                Ok(0) => break,
+                Ok(_) => md5.input(&buf),
+                Err(e) => panic!("{}: {}", fname, e),
             }
         }
         md5.result_str()
@@ -70,20 +70,17 @@ impl DupsData {
 
                 if path.is_dir() {
                     self.process_folder(&path)?;
-
                 } else if !path.is_file() {
-                    continue
-
+                    continue;
                 } else {
                     let fname = path.to_str().unwrap();
 
                     let key = self.get_md5sum(&path);
 
-                    if self.data.contains_key(&key) {
-                        self.data.get_mut(&key).unwrap().push(fname.to_string());
-                    } else {
-                        self.data.insert(key, vec![fname.to_string()]);
-                    }
+                    self.data
+                        .entry(key)
+                        .or_insert(vec![])
+                        .push(String::from(fname));
 
                     self.update_progress();
                 }
@@ -118,17 +115,13 @@ fn main() {
     // directories were not provided
     if args.len() == 1 {
         usage(&program);
-
     } else {
         // data storage (shared across the provided dirs)
         let mut dups_data = DupsData::new();
 
         // hangle the results
         for dir in args[1..].iter() {
-            match dups_data.process_folder(&Path::new(dir)) {
-                Ok(_)  => {},
-                Err(_) => {},   // ignoring errors
-            }
+            if dups_data.process_folder(&Path::new(dir)).is_ok() {}
         }
 
         // display the duplicates
