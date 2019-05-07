@@ -52,6 +52,7 @@ impl DupsData {
                 Err(e) => panic!("{}: {}", fname, e),
             }
         }
+
         md5.result_str()
     }
 
@@ -74,18 +75,14 @@ impl DupsData {
                     continue;
                 } else {
                     let fname = path.to_str().unwrap();
-
                     let key = self.get_md5sum(&path);
-
-                    self.data
-                        .entry(key)
-                        .or_insert(vec![])
-                        .push(String::from(fname));
+                    self.data.entry(key).or_default().push(String::from(fname));
 
                     self.update_progress();
                 }
             }
         }
+
         Ok(())
     }
 
