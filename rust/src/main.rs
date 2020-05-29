@@ -17,7 +17,7 @@ use crypto::md5;
 
 use std::collections::HashMap;
 
-const VERSION: &str = "0.01";
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BLOCK_SIZE: usize = 128;
 
 struct DupsData {
@@ -88,14 +88,21 @@ impl DupsData {
 
     // display the duplicates in the database.
     fn display_results(&mut self) {
+        let mut got_dups = false;
+
         // output the result
         for (k, v) in self.data.iter() {
             if v.len() > 1 {
+                got_dups = true;
                 println!("{}", k);
                 for value in v.iter() {
                     println!("\t{}", value);
                 }
             }
+        }
+
+        if !got_dups {
+            println!()
         }
     }
 }

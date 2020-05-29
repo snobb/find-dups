@@ -103,12 +103,19 @@ func main() {
 	<-done
 
 	// output results
+	gotDups := false
 	for hash, files := range registry {
 		if len(files) > 1 {
+			gotDups = true
+
 			fmt.Println(hash)
 			for _, file := range files {
-				fmt.Println("\t", file)
+				fmt.Printf("\t\"%s\"", file)
 			}
 		}
+	}
+
+	if !gotDups {
+		fmt.Println()
 	}
 }
