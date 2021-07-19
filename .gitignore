@@ -1,0 +1,4 @@
+multithreaded-go/bin
+rust/target
+*.o
+build_host.h

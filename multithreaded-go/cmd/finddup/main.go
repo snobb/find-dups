@@ -5,10 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
 )
+
+var version string
 
 type result struct {
 	file string
@@ -16,106 +19,137 @@ type result struct {
 }
 
 func walk(dir string, queue chan<- string) {
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "ERROR:", err)
+			return err
+		}
 
-		} else if info.Mode().IsRegular() {
+		if info.Mode().IsRegular() {
 			queue <- path
 		}
 
 		return nil
 	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func worker(queue <-chan string, res chan<- *result, wg *sync.WaitGroup) {
-	h := md5.New()
+func handleFile(file string) (*result, error) {
+	hash := md5.New()
+	defer hash.Reset()
 
-	for file := range queue {
-		f, err := os.Open(file)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "ERROR:", err)
-		}
+	fh, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer fh.Close()
 
-		if _, err := io.Copy(h, f); err != nil {
-			fmt.Fprintln(os.Stderr, "ERROR:", err)
-			continue
-		}
-		f.Close()
-
-		res <- &result{
-			file: file,
-			hash: fmt.Sprintf("%x", h.Sum(nil)),
-		}
-
-		h.Reset()
+	if _, err := io.Copy(hash, fh); err != nil {
+		return nil, err
 	}
 
-	wg.Done()
+	return &result{
+		file: file,
+		hash: fmt.Sprintf("%x", hash.Sum(nil)),
+	}, nil
 }
 
-func main() {
-	var nworker int
+func printRegistry(reg map[string][]string) {
+	found := false
 
-	// handle command arguments
-	flag.IntVar(&nworker, "n", 6, "number of workers")
-	flag.Parse()
-
-	dirs := flag.Args()
-
-	if len(dirs) == 0 {
-		dirs = []string{"."}
-	}
-
-	// start sending files to the processing queue
-	queue := make(chan string)
-	go func() {
-		for _, dir := range dirs {
-			walk(dir, queue)
-		}
-		close(queue)
-	}()
-
-	registry := make(map[string][]string)
-	results := make(chan *result)
-
-	// handle results in a separate go routine
-	done := make(chan struct{})
-	go func() {
-		var cnt int64 = 1
-		for res := range results {
-			fmt.Fprintf(os.Stderr, "\rProcessing file: %d ", cnt)
-			registry[res.hash] = append(registry[res.hash], res.file)
-			cnt++
-		}
-		close(done)
-	}()
-
-	// start workers
-	var wg sync.WaitGroup
-	wg.Add(nworker)
-
-	for i := 0; i < nworker; i++ {
-		go worker(queue, results, &wg)
-	}
-	wg.Wait()
-	close(results)
-	<-done
-
-	// output results
-	gotDups := false
-	for hash, files := range registry {
+	for hash, files := range reg {
 		if len(files) > 1 {
-			gotDups = true
-
+			found = true
 			fmt.Println(hash)
+
 			for _, file := range files {
-				fmt.Printf("\t\"%s\"", file)
+				fmt.Printf("\t\"%s\"\n", file)
 			}
 		}
 	}
 
-	if !gotDups {
+	if !found {
 		fmt.Println()
 	}
+}
+
+func walkDirs(dirs []string) <-chan string {
+	// start sending files to the processing fileCh
+	fileCh := make(chan string)
+	go func() {
+		defer close(fileCh)
+
+		for _, dir := range dirs {
+			walk(dir, fileCh)
+		}
+	}()
+
+	return fileCh
+}
+
+func main() {
+	var (
+		nworker int
+		ver     bool
+	)
+
+	// handle command arguments
+	flag.IntVar(&nworker, "n", 4, "number of workers")
+	flag.BoolVar(&ver, "v", false, "show version")
+	flag.Parse()
+
+	if ver {
+		fmt.Println(version)
+		return
+	}
+
+	registry := make(map[string][]string)
+
+	// handle results in a separate go routine
+	resultCh := make(chan *result)
+	var cnt uint64
+	var wg sync.WaitGroup
+
+	go func() {
+		for res := range resultCh {
+			cnt++
+			fmt.Fprintf(os.Stderr, "Processing file: %d\r", cnt)
+			registry[res.hash] = append(registry[res.hash], res.file)
+			wg.Done()
+		}
+	}()
+
+	taskCh := make(chan struct{}, nworker)
+
+	dirs := flag.Args()
+	if len(dirs) == 0 {
+		dirs = []string{"."} // default to current dir
+	}
+
+	// walk files and get a channel with files.
+	for file := range walkDirs(dirs) {
+		taskCh <- struct{}{}
+		wg.Add(1)
+
+		go func(file string) {
+			defer func() {
+				<-taskCh
+			}()
+
+			res, err := handleFile(file)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+				return
+			}
+
+			resultCh <- res
+		}(file)
+	}
+
+	wg.Wait()
+
+	printRegistry(registry)
 }
