@@ -66,8 +66,7 @@ impl DupsData {
     fn process_folder(&mut self, dir: &Path) -> io::Result<()> {
         if dir.is_dir() {
             for entry in fs::read_dir(dir)? {
-                let entry = entry?;
-                let path = entry.path();
+                let path = entry?.path();
 
                 if path.is_dir() {
                     self.process_folder(&path)?;
@@ -95,6 +94,7 @@ impl DupsData {
             if v.len() > 1 {
                 got_dups = true;
                 println!("{}", k);
+
                 for value in v.iter() {
                     println!("\t{}", value);
                 }
@@ -125,7 +125,7 @@ fn main() {
 
         // hangle the results
         for dir in args[1..].iter() {
-            if dups_data.process_folder(&Path::new(dir)).is_ok() {}
+            dups_data.process_folder(Path::new(dir)).unwrap()
         }
 
         // display the duplicates
