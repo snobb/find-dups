@@ -4,16 +4,18 @@
 # Author: Alex Kozadaev (2013)
 #
 
-import sys, os, hashlib
+import sys
+import os
+import hashlib
 import errno
 
-VERSION = "1.04"
+VERSION = "1.05"
 
 
 def get_md5sum(filename):
     md5 = hashlib.md5()
-    with open(filename,"rb") as f:
-        for chunk in iter(lambda: f.read(128*md5.block_size), b""):
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b""):
             md5.update(chunk)
     return md5.hexdigest()
 
@@ -31,13 +33,13 @@ def find_dups(top, db):
             db.setdefault(md5sum, []).append(path)
 
             count += 1
-            print >>sys.stderr, "\rProcessed files: {} ".format(count),
+            print(f"\rProcessed files: {count} ", end=' ', file=sys.stderr)
             sys.stderr.flush()
 
 
 def usage(prog):
-    print "{} v{} [python edition]".format(prog, VERSION)
-    print "Usage: finddup [directory/files to search]\n"
+    print(f"{prog} v{VERSION} [python edition]")
+    print("Usage: finddup [directory/files to search]\n")
 
 
 if __name__ == "__main__":
@@ -52,19 +54,18 @@ if __name__ == "__main__":
         for directory in sys.argv:
             find_dups(directory, db)
 
-        print >>sys.stderr, "\r",
+        print("\r", end=' ', file=sys.stderr)
 
-        for chksum in db.iterkeys():
+        for chksum in db.keys():
             if len(db[chksum]) > 1:
-                print "{}\n\t".format(chksum),
-                print "\n\t".join(db[chksum])
+                print(f"{chksum}\n\t", end=' ')
+                print("\n\t".join(db[chksum]))
     except IOError as e:
         if e.errno == errno.EPIPE:
-            pass    # ignoring SIGPIPE
+            pass  # ignoring SIGPIPE
         else:
-            print >>sys.stderr, "ERROR: {}".format(e)
+            print(f"ERROR: {e}", file=sys.stderr)
             exit(1)
     except KeyboardInterrupt:
-        print >>sys.stderr, "interrupted..."
+        print("interrupted...", file=sys.stderr)
         exit(1)
-
