@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -13,9 +14,14 @@ import (
 
 var version string
 
-type result struct {
+type fileInfo struct {
 	file string
 	hash string
+}
+
+type resJSON struct {
+	Hash  string   `json:"hash"`
+	Files []string `json:"files"`
 }
 
 func walk(dir string, queue chan<- string) {
@@ -37,7 +43,7 @@ func walk(dir string, queue chan<- string) {
 	}
 }
 
-func handleFile(file string) (*result, error) {
+func handleFile(file string) (*fileInfo, error) {
 	hash := md5.New()
 	defer hash.Reset()
 
@@ -51,13 +57,13 @@ func handleFile(file string) (*result, error) {
 		return nil, err
 	}
 
-	return &result{
+	return &fileInfo{
 		file: file,
 		hash: fmt.Sprintf("%x", hash.Sum(nil)),
 	}, nil
 }
 
-func printRegistry(reg map[string][]string) {
+func printText(reg map[string][]string) {
 	found := false
 
 	for hash, files := range reg {
@@ -73,6 +79,29 @@ func printRegistry(reg map[string][]string) {
 
 	if !found {
 		fmt.Println()
+	}
+}
+
+func printJSON(reg map[string][]string) {
+	var res []resJSON
+
+	for hash, files := range reg {
+		if len(files) == 1 {
+			continue
+		}
+
+		res = append(res, resJSON{
+			Hash:  hash,
+			Files: files,
+		})
+	}
+
+	if len(res) == 0 {
+		return
+	}
+
+	if err := json.NewEncoder(os.Stdout).Encode(res); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
 	}
 }
 
@@ -94,11 +123,13 @@ func main() {
 	var (
 		nworker int
 		ver     bool
+		outJSON bool
 	)
 
 	// handle command arguments
 	flag.IntVar(&nworker, "n", 4, "number of workers")
 	flag.BoolVar(&ver, "v", false, "show version")
+	flag.BoolVar(&outJSON, "j", false, "output json")
 	flag.Parse()
 
 	if ver {
@@ -109,7 +140,7 @@ func main() {
 	registry := make(map[string][]string)
 
 	// handle results in a separate go routine
-	resultCh := make(chan *result)
+	resultCh := make(chan *fileInfo)
 	var cnt uint64
 	var wg sync.WaitGroup
 
@@ -151,5 +182,9 @@ func main() {
 
 	wg.Wait()
 
-	printRegistry(registry)
+	if outJSON {
+		printJSON(registry)
+	} else {
+		printText(registry)
+	}
 }
