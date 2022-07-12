@@ -3,9 +3,9 @@
 // Author: Alex Kozadaev (2015)
 //
 
-#[macro_use(print_err)]
-extern crate finddups;
 extern crate crypto;
+
+mod macros;
 
 use std::env;
 use std::fs;

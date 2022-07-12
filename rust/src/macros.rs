@@ -1,3 +1,7 @@
+/*
+ * author: Aleksei Kozadaev (2022)
+ */
+
 #[macro_export]
 macro_rules! print_err {
     ($($arg:tt)*) => (
@@ -12,8 +16,4 @@ macro_rules! print_err {
             }
         }
     )
-}
-
-#[test]
-fn it_works() {
 }

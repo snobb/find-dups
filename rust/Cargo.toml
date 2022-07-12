@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Alex Kozadaev <akozadaev at yahoo com>"]
 
 [dependencies]
-rust-crypto = "0.2.34"
+rust-crypto = "^0.2"
