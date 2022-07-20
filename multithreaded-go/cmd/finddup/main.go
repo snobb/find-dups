@@ -44,6 +44,21 @@ func walk(dir string, queue chan<- string) {
 	}
 }
 
+func walkDirs(dirs []string) <-chan string {
+	// start sending files to the processing fileCh
+	fileCh := make(chan string, 1)
+
+	go func() {
+		defer close(fileCh)
+
+		for _, dir := range dirs {
+			walk(dir, fileCh)
+		}
+	}()
+
+	return fileCh
+}
+
 func handleFile(file string) (*fileInfo, error) {
 	hash := md5.New()
 	defer hash.Reset()
@@ -108,84 +123,75 @@ func printJSON(reg map[string][]string) {
 	}
 }
 
-func walkDirs(dirs []string) <-chan string {
-	// start sending files to the processing fileCh
-	fileCh := make(chan string)
-	go func() {
-		defer close(fileCh)
-
-		for _, dir := range dirs {
-			walk(dir, fileCh)
-		}
-	}()
-
-	return fileCh
-}
-
 func main() {
 	var (
 		nworker int
-		ver     bool
-		outJSON bool
+		isVer   bool
+		isJSON  bool
 	)
 
 	// handle command arguments
 	flag.IntVar(&nworker, "n", 4, "number of workers")
-	flag.BoolVar(&ver, "v", false, "show version")
-	flag.BoolVar(&outJSON, "j", false, "output json")
+	flag.BoolVar(&isVer, "v", false, "show version")
+	flag.BoolVar(&isJSON, "j", false, "output json")
 	flag.Parse()
 
-	if ver {
+	if isVer {
 		fmt.Println(version)
 		return
 	}
-
-	registry := make(map[string][]string)
-
-	// handle results in a separate go routine
-	resultCh := make(chan *fileInfo)
-	var cnt uint64
-	var wg sync.WaitGroup
-
-	go func() {
-		for res := range resultCh {
-			cnt++
-			fmt.Fprintf(os.Stderr, "Processing file: %d\r", cnt)
-			registry[res.hash] = append(registry[res.hash], res.file)
-			wg.Done()
-		}
-	}()
-
-	taskCh := make(chan struct{}, nworker)
 
 	dirs := flag.Args()
 	if len(dirs) == 0 {
 		dirs = []string{"."} // default to current dir
 	}
 
+	var (
+		cnt uint64
+		wg  sync.WaitGroup
+	)
+
+	// handle results in a separate go routine
+	resultCh := make(chan *fileInfo, nworker)
+	taskCh := make(chan string, nworker)
+	registry := make(map[string][]string)
+
+	// start result handler worker.
+	go func() {
+		for res := range resultCh {
+			cnt++
+			fmt.Fprintf(os.Stderr, "Processed: %d\r", cnt)
+			registry[res.hash] = append(registry[res.hash], res.file)
+			wg.Done()
+		}
+	}()
+
+	// start <nworker> workers.
+	for i := 0; i < nworker; i++ {
+		go func() {
+			for file := range taskCh {
+				res, err := handleFile(file)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+				}
+
+				resultCh <- res
+			}
+		}()
+	}
+
 	// walk files and get a channel with files.
 	for file := range walkDirs(dirs) {
-		taskCh <- struct{}{}
 		wg.Add(1)
-
-		go func(file string) {
-			defer func() {
-				<-taskCh
-			}()
-
-			res, err := handleFile(file)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
-				return
-			}
-
-			resultCh <- res
-		}(file)
+		taskCh <- file
 	}
 
 	wg.Wait()
+	close(taskCh)
+	close(resultCh)
 
-	if outJSON {
+	// print results
+	if isJSON {
 		printJSON(registry)
 	} else {
 		printText(registry)
