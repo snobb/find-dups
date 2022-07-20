@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 )
 
@@ -89,6 +90,8 @@ func printJSON(reg map[string][]string) {
 		if len(files) == 1 {
 			continue
 		}
+
+		sort.Strings(files)
 
 		res = append(res, resJSON{
 			Hash:  hash,
