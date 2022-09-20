@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"runtime/trace"
 	"sort"
 	"sync"
 )
@@ -128,17 +130,31 @@ func main() {
 		nworker int
 		isVer   bool
 		isJSON  bool
+		isTrace bool
 	)
 
 	// handle command arguments
-	flag.IntVar(&nworker, "n", 4, "number of workers")
+	flag.IntVar(&nworker, "n", runtime.NumCPU(), "number of workers")
 	flag.BoolVar(&isVer, "v", false, "show version")
 	flag.BoolVar(&isJSON, "j", false, "output json")
+	flag.BoolVar(&isTrace, "t", false, "save trace data to trace.out")
 	flag.Parse()
 
 	if isVer {
 		fmt.Println(version)
 		return
+	}
+
+	if isTrace || os.Getenv("TRACE") != "" {
+		f, err := os.Create("trace.out")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := trace.Start(f); err != nil {
+			panic(err)
+		}
+		defer trace.Stop()
 	}
 
 	dirs := flag.Args()
